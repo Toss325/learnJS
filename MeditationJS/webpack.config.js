@@ -3,9 +3,27 @@ const { partialRight } = require('lodash');
 const path = require('path');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-
+const OptimizeCssAssetPlugin = require('css-minimizer-webpack-plugin');
+const TerserWebpackPlugin = require('terser-webpack-plugin');
 
 const isDev = process.env.NODE_ENV === 'development';
+const isProd = !isDev;
+
+const optimization = () => {
+  const config = {
+    splitChunks: {
+      chunks: 'all'
+    }
+  };
+  if (isProd) {
+    config.minimizer = [
+      new OptimizeCssAssetPlugin(),
+      new TerserWebpackPlugin(),
+    ];
+  }
+  return config;  
+};
+
 console.log('IS DEV:', isDev);
 
 
@@ -18,7 +36,7 @@ module.exports = {
   },  
   output: {
       clean: true, // Clean the output directory before emit.
-      filename: '[name].[contentnamehash].js',
+      filename: '[name].[contenthash].js',
       path: path.resolve(__dirname, 'dist')
     },
   resolve: {
@@ -28,11 +46,7 @@ module.exports = {
       '@': path.resolve(__dirname, 'src'),
     },
   },  
-  optimization: {
-    splitChunks: {
-      chunks: 'all'
-    }
-  },
+  optimization: optimization(),
   devServer: {
     port: 4200,
     hot: isDev
@@ -40,6 +54,9 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
     template: './src/index.html',
+    minify: {
+      collapseWhitespace: isProd,
+    },
     }),
     new CopyWebpackPlugin({
       patterns: [
@@ -48,7 +65,7 @@ module.exports = {
       ],  
       }),
     new MiniCssExtractPlugin ({
-      filename: '[name].[contentnamehash].css' 
+      filename: '[name].[contenthash].css' 
     }) 
   ], 
    module: {
