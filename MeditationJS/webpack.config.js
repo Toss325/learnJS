@@ -75,11 +75,22 @@ module.exports = {
         use: [
           {
             loader: MiniCssExtractPlugin.loader,
-            options: {
-              
+            options: {              
             },            
           },  
           'css-loader'
+        ]
+      },
+      {
+        test: /\.less$/i,
+        use: [
+          {
+            loader: MiniCssExtractPlugin.loader,
+            options: {              
+            },            
+          },  
+          'css-loader',
+          'less-loader',
         ]
       },
       {
