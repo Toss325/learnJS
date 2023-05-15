@@ -43,37 +43,61 @@ const cssLoaders = extra => {
   return loaders;
 };
 
+const babelOptions = preset => {
+  const opts = {
+      presets: ['@babel/preset-env']
+    };
+    if (preset) {
+      opts.presets.push(preset);
+    }
+  return opts;
+};
+
+const jsLoaders = () => {
+  const loaders = [{
+    loader: 'babel-loader',
+    options: babelOptions(),
+  }];
+  if (isDev) {
+    loaders.push('eslint-loader');
+  }
+  return loaders;
+};
+
+
+
 module.exports = {   
   //context: path.resolve(__dirname, 'src'),
   mode: 'development',
   entry: {
-    main: './src/index.js',
-    analytics: './src/analytics.js'
-  },  
+      main: ['@babel/polyfill','./src/index.jsx'],
+      analytics: './src/analytics.ts'
+    },  
   output: {
       clean: true, // Clean the output directory before emit.
       filename: filename('js'),
       path: path.resolve(__dirname, 'dist')
     },
   resolve: {
-    extensions: ['.js', '.json'],
-    alias: {
-      '@models': path.resolve(__dirname, 'src/models/'),
-      '@': path.resolve(__dirname, 'src'),
-    },
-  },  
+      extensions: ['.js', '.json'],
+      alias: {
+        '@models': path.resolve(__dirname, 'src/models/'),
+        '@': path.resolve(__dirname, 'src'),
+      },
+    },  
   optimization: optimization(),
-  devServer: {
-    port: 4200,
-    hot: isDev
-  },
-  plugins: [
-    new HtmlWebpackPlugin({
-    template: './src/index.html',
-    minify: {
-      collapseWhitespace: isProd,
+    devServer: {
+      port: 4200,
+      hot: isDev
     },
-    }),
+  devtool: isDev ? 'source-map' : '',
+  plugins: [
+      new HtmlWebpackPlugin({
+      template: './src/index.html',
+        minify: {
+          collapseWhitespace: isProd,
+        },
+      }),
     new CopyWebpackPlugin({
       patterns: [
         {from: path.resolve(__dirname, './src/assets/favicon.ico'),
@@ -81,8 +105,8 @@ module.exports = {
       ],  
       }),
     new MiniCssExtractPlugin ({
-      filename: filename('css')
-    }) 
+        filename: filename('css')
+      }) 
   ], 
    module: {
     rules: [
@@ -115,8 +139,31 @@ module.exports = {
       {
         test: /\.(csv|tsv)$/i,
         use: ['csv-loader'],    
-      },      
-    ]
-   } 
-  };
+      },  
+      {
+        test: /\.js$/,
+        exclude: /node_modules/,
+        use: jsLoaders()
+      },  
+      {
+        test: /\.ts$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: babelOptions('@babel/preset-typescript')
+        }
+      },
+      {
+        test: /\.jsx$/,
+        exclude: /node_modules/,
+        use: {
+          loader: 'babel-loader',
+          options: babelOptions('@babel/preset-react')
+        }
+      },
+
+      ]
+    },  
+   };
+ 
   
